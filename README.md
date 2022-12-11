@@ -1,1 +1,1 @@
-Genetic algorithm for finding the maximum of the functions of two variables
+This repository contains an implementation of a Genetic Algorithm for finding the maximum of functions of two variables. It uses a population-based approach to search for the optimal solution, combining and mutating solutions from the current population to generate new solutions.
