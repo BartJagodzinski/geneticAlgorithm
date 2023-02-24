@@ -9,7 +9,9 @@
 #include <tuple>
 #include <map>
 #include <limits>
+#include <fstream>
 
+// population
 #define N 4
 
 class Point {
@@ -24,18 +26,17 @@ public:
 	void setY(int y) { std::get<1>(_xy) += y; }
 	void setValue() { std::get<2>(_xy) = func(std::get<0>(_xy), std::get<1>(_xy)); }
 
-	double func(double x, double y) {	return  x / ((x * x) + 2 * (y * y) + 1); }	
+	double func(double x, double y) {	return  x / ((x * x) + 2 * (y * y) + 1); }
 
-	void print() { std::cout << "(" << std::get<0>(_xy) << ", " << std::get<1>(_xy) << ")" << " = " << std::get<2>(_xy) << std::endl; }
-
+	std::string print() { return "(" + std::to_string(std::get<0>(_xy)) + ", " + std::to_string(std::get<1>(_xy)) + ") = " + std::to_string(std::get<2>(_xy)); }
 	bool operator != (const Point& p) { return _xy != p._xy; }
 	bool operator == (const Point& p) { return _xy == p._xy; }
 };
 
 class Genetic {
-	std::vector<Point> _population;
+    std::vector<Point> _population;
 public:
-	Genetic(){}
+	Genetic() {}
 
 	int rand(int from, int to) {
 		std::random_device rd;
@@ -43,12 +44,12 @@ public:
 		std::uniform_int_distribution<> dis(from, to);
 		return dis(gen);
 	}
-	
+
 	Point best() {
 		double f = -999999999;
-		Point bestValue;		
+		Point bestValue;
 		size_t id = 0;
-		for (size_t i = 0; i < _population.size(); i++) {
+		for (size_t i = 0; i < _population.size(); ++i) {
 			if (std::get<2>(_population[i].get()) > f) { bestValue = _population[i];  f = std::get<2>(_population[i].get()); id = i; }
 		}
 
@@ -56,16 +57,16 @@ public:
 
 		return bestValue;
 	}
-	
+
 	void delWorst() {
 		double f = 999999999;
 		size_t id = 0;
-		for (size_t i = 0; i < _population.size(); i++) {
-			if (std::get<2>(_population[i].get()) < f) { f = std::get<2>(_population[i].get()); id = i;
-		}
-		}
+		for (size_t i = 0; i < _population.size(); ++i)
+			if (std::get<2>(_population[i].get()) < f) { f = std::get<2>(_population[i].get()); id = i; }
 
-		_population.erase(_population.begin() + id);		
+
+
+		_population.erase(_population.begin() + id);
 	}
 
 	void mutate(Point &p, int axis, int newValue) {
@@ -74,7 +75,7 @@ public:
 		p.setValue();
 	}
 
-	void mix(int range) {		
+	void mix(int range) {
 		delWorst();
 		Point bestUnit = best();
 
@@ -85,11 +86,11 @@ public:
 
 		Point arr[N] = { p1, p2, p3, p4 };
 
-		for (size_t i = 0; i < N; i++) {
-			for (size_t j = i + 1; j < N; j++) {
+		for (size_t i = 0; i < N; ++i) {
+			for (size_t j = i + 1; j < N; ++j)
 				if (arr[i] == arr[j]) mutate(arr[i], rand(0, 1), rand(-1, 1));
-			}
-		}		
+		}
+
 		_population.clear();
 		for (size_t i = 0; i < N; i++)
 			_population.push_back(arr[i]);
@@ -98,22 +99,22 @@ public:
 	}
 
 	void run(size_t iterLimit, int range) {
-		for (size_t i = 0; i < N; i++)
+		for (size_t i = 0; i < N; ++i)
 			_population.push_back(Point(rand(-range, range), rand(-range, range)));
+        std::ofstream resultsFile;
+
+        resultsFile.open("results.txt", std::ios_base::app);
 
 		size_t it = 0;
-
-		while (it < iterLimit) {			
+		while (it < iterLimit) {
 			mix(range);
-			std::cout << "== generation " << it << " == " << std::endl;
-			print();
-			it++;
+			resultsFile << "== generation " << it << " ==" << std::endl;
+            for (auto el : _population)
+                resultsFile << el.print() << std::endl;
+			++it;
 		}
-
-		//print();
+        resultsFile.close();
 	}
-
-	void print() { for (auto el : _population) el.print(); }
 };
 
 int main() {
